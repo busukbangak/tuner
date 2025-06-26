@@ -21,7 +21,13 @@ const Tuner: React.FC = () => {
 
     async function start() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
         const audioContext = new ((window as typeof window & { webkitAudioContext?: typeof AudioContext }).AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
         sampleRateRef.current = audioContext.sampleRate;
         const source = audioContext.createMediaStreamSource(stream);
