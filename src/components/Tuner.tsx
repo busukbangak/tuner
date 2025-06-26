@@ -44,7 +44,12 @@ const Tuner: React.FC = () => {
       if (pitch > 0 && pitch < 2000) {
         pitchHistory.current.push(pitch);
         if (pitchHistory.current.length > HISTORY_LENGTH) pitchHistory.current.shift();
-        const displayPitch = Math.min(...pitchHistory.current);
+        let displayPitch;
+        if (pitchHistory.current.length < HISTORY_LENGTH) {
+          displayPitch = pitch;
+        } else {
+          displayPitch = Math.min(...pitchHistory.current);
+        }
         const midi = Math.round(12 * (Math.log2(displayPitch / 440)) + 69);
         setNote(noteNames[midi % 12] + (Math.floor(midi / 12) - 1));
         setFrequency(displayPitch);
