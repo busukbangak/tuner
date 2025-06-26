@@ -33,11 +33,11 @@ export function autoCorrelate(buf: Float32Array, sampleRate: number): number {
     rms += val * val;
   }
   rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.01) // too quiet
+  if (rms < 0.005) // Reduced threshold for mobile devices
     return -1;
 
   let r1 = 0, r2 = SIZE - 1;
-  const thres = 0.2;
+  const thres = 0.15; // Reduced threshold for better sensitivity
   for (let i = 0; i < SIZE / 2; i++) {
     if (Math.abs(buf[i]) < thres) { r1 = i; break; }
   }
