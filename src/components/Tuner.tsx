@@ -205,7 +205,8 @@ const Tuner: React.FC = () => {
           setNote(noteNames[midi % 12] + (Math.floor(midi / 12) - 1));
           setFrequency(displayPitch);
           const ref = 440 * Math.pow(2, (midi - 69) / 12);
-          setCents(Math.round(1200 * Math.log2(displayPitch / ref)));
+          const centsOff = Math.round(1200 * Math.log2(displayPitch / ref));
+          setCents(centsOff);
         }
       } else {
         pitchHistory.current = [];
@@ -267,9 +268,6 @@ const Tuner: React.FC = () => {
       </div>
       <div style={{ fontSize: '1.2em', margin: '10px 0' }}>
         Cents: <strong>{cents ? (cents > 0 ? '+' : '') + cents : '--'}</strong>
-      </div>
-      <div style={{ fontSize: '1.2em', margin: '10px 0' }}>
-        Half-steps: <strong>{cents ? (cents / 100).toFixed(2) : '--'}</strong>
       </div>
       <div style={{ fontSize: '1em', margin: '10px 0', color: '#666' }}>
         Volume: {(volume * 100).toFixed(1)}%
