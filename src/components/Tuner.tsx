@@ -12,7 +12,8 @@ const Tuner: React.FC = () => {
   const [active, setActive] = useState(false);
   const [volume, setVolume] = useState(0);
   const [isPlayingTone, setIsPlayingTone] = useState(false);
-  const [gainLevel, setGainLevel] = useState(5.0);
+  const [gainLevel, setGainLevel] = useState(1.0);
+  const [isMobile, setIsMobile] = useState(false);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataRef = useRef<Float32Array>(new Float32Array(bufferSize));
   const rafRef = useRef<number | null>(null);
@@ -24,19 +25,58 @@ const Tuner: React.FC = () => {
   useEffect(() => {
     let stream: MediaStream;
 
+    // Detect if we're on a mobile device
+    const detectMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      // Conservative mobile detection - only actual mobile devices
+      const mobileKeywords = ['android', 'iphone', 'ipad', 'ipod', 'blackberry', 'iemobile', 'opera mini'];
+      const isMobileDevice = mobileKeywords.some(keyword => userAgent.includes(keyword));
+      
+      // Additional check for mobile-specific patterns
+      const hasMobilePattern = /mobile|tablet|phone/i.test(userAgent);
+      
+      return isMobileDevice || hasMobilePattern;
+    };
+
+    const mobile = detectMobile();
+    setIsMobile(mobile);
+    
+    // Debug logging
+    console.log('Device detection:', {
+      userAgent: navigator.userAgent,
+      isMobile: mobile,
+      hasTouch: 'ontouchstart' in window,
+      maxTouchPoints: navigator.maxTouchPoints,
+      screenWidth: window.innerWidth
+    });
+    
+    // Set appropriate default gain based on device
+    if (mobile) {
+      setGainLevel(5.0); // Higher gain for mobile
+    } else {
+      setGainLevel(0.5); // Lower gain for desktop
+    }
+
     async function start() {
       try {
-        // More aggressive audio constraints for mobile
-        const constraints = {
+        // Different audio constraints for mobile vs desktop
+        const constraints = mobile ? {
+          // Mobile: More aggressive settings to bypass noise suppression
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
             autoGainControl: true,
             sampleRate: { ideal: 44100 },
             channelCount: { ideal: 1 },
-            // Mobile-specific optimizations
             latency: { ideal: 0.01 },
             sampleSize: { ideal: 16 }
+          }
+        } : {
+          // Desktop: Original settings before mobile optimizations
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: true
           }
         };
 
@@ -84,19 +124,24 @@ const Tuner: React.FC = () => {
         const source = audioContext.createMediaStreamSource(stream);
         const analyser = audioContext.createAnalyser();
         
-        // Add a gain node to boost the signal
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = gainLevel; // Use the state value
-        gainNodeRef.current = gainNode; // Store reference for later updates
+        // Only add gain node for mobile devices
+        if (mobile) {
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = gainLevel;
+          gainNodeRef.current = gainNode;
+          
+          // Connect: source -> gain -> analyser (mobile)
+          source.connect(gainNode);
+          gainNode.connect(analyser);
+        } else {
+          // Connect: source -> analyser (desktop - original behavior)
+          source.connect(analyser);
+        }
         
         analyser.fftSize = bufferSize;
         analyser.smoothingTimeConstant = 0.3; // Reduced for more responsive detection
         analyser.minDecibels = -90; // Lower threshold for mobile
         analyser.maxDecibels = -10;
-        
-        // Connect: source -> gain -> analyser
-        source.connect(gainNode);
-        gainNode.connect(analyser);
         
         analyserRef.current = analyser;
         setActive(true);
@@ -128,8 +173,8 @@ const Tuner: React.FC = () => {
       rms = Math.sqrt(rms / dataRef.current.length);
       setVolume(rms);
       
-      // Use a lower threshold for mobile devices
-      const threshold = 0.001; // Further reduced from 0.005 for mobile
+      // Use different thresholds for mobile vs desktop
+      const threshold = mobile ? 0.001 : 0.005; // Lowered desktop threshold for better low note detection
       if (rms < threshold) {
         pitchHistory.current = [];
         setNote('—');
@@ -223,31 +268,39 @@ const Tuner: React.FC = () => {
       <div style={{ fontSize: '1.2em', margin: '10px 0' }}>
         Cents: <strong>{cents ? (cents > 0 ? '+' : '') + cents : '--'}</strong>
       </div>
+      <div style={{ fontSize: '1.2em', margin: '10px 0' }}>
+        Half-steps: <strong>{cents ? (cents / 100).toFixed(2) : '--'}</strong>
+      </div>
       <div style={{ fontSize: '1em', margin: '10px 0', color: '#666' }}>
         Volume: {(volume * 100).toFixed(1)}%
-        {volume < 0.001 && (
+        {volume < (isMobile ? 0.001 : 0.005) && (
           <span style={{ color: 'red', marginLeft: '10px' }}>
             ⚠️ Too quiet - speak louder or move closer to microphone
           </span>
         )}
       </div>
-      <div style={{ margin: '15px 0' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>
-          Gain Boost: {gainLevel.toFixed(1)}x
-        </label>
-        <input
-          type="range"
-          min="1"
-          max="20"
-          step="0.5"
-          value={gainLevel}
-          onChange={(e) => updateGain(parseFloat(e.target.value))}
-          style={{ width: '200px' }}
-        />
-        <div style={{ fontSize: '0.8em', color: '#666', marginTop: '5px' }}>
-          Increase this if volume is too low
-        </div>
+      <div style={{ fontSize: '0.8em', margin: '5px 0', color: '#888' }}>
+        Device: {isMobile ? 'Mobile' : 'Desktop'} | Threshold: {(isMobile ? 0.001 : 0.005) * 100}%
       </div>
+      {isMobile && (
+        <div style={{ margin: '15px 0' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Gain Boost: {gainLevel.toFixed(1)}x
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="20"
+            step="0.1"
+            value={gainLevel}
+            onChange={(e) => updateGain(parseFloat(e.target.value))}
+            style={{ width: '200px' }}
+          />
+          <div style={{ fontSize: '0.8em', color: '#666', marginTop: '5px' }}>
+            Values below 1.0 reduce volume, above 1.0 boost volume
+          </div>
+        </div>
+      )}
       {!active && (
         <div style={{ color: 'red', margin: '20px 0' }}>
           Waiting for microphone access... Please grant microphone permissions.
