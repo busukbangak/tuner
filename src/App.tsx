@@ -1,4 +1,3 @@
-import React from 'react';
 import Tuner from './components/Tuner';
 import './App.css';
 
