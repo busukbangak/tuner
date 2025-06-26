@@ -33,7 +33,7 @@ export function autoCorrelate(buf: Float32Array, sampleRate: number): number {
     rms += val * val;
   }
   rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.005) // Reduced threshold for mobile devices
+  if (rms < 0.001) // Further reduced threshold for mobile devices
     return -1;
 
   let r1 = 0, r2 = SIZE - 1;

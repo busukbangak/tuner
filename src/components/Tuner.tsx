@@ -24,24 +24,49 @@ const Tuner: React.FC = () => {
 
     async function start() {
       try {
+        // More aggressive audio constraints for mobile
         const constraints = {
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: false,
+            autoGainControl: true,
             sampleRate: { ideal: 44100 },
             channelCount: { ideal: 1 },
+            // Mobile-specific optimizations
             latency: { ideal: 0.01 },
             sampleSize: { ideal: 16 }
           }
         };
 
-        // Try to get user media with fallback
+        // Try multiple constraint sets for mobile compatibility
         try {
           stream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch {
-          // Fallback to basic audio constraints if the above fails
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          try {
+            // Fallback 1: Try with different sample rate
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: true,
+                sampleRate: { ideal: 22050 }
+              }
+            });
+          } catch {
+            try {
+              // Fallback 2: Try with minimal constraints
+              stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                  echoCancellation: false,
+                  noiseSuppression: false,
+                  autoGainControl: true
+                }
+              });
+            } catch {
+              // Final fallback: basic audio
+              stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
+          }
         }
 
         // Create audio context with mobile compatibility
@@ -65,6 +90,14 @@ const Tuner: React.FC = () => {
         analyserRef.current = analyser;
         source.connect(analyser);
         setActive(true);
+        
+        // Log successful audio setup for debugging
+        console.log('Audio setup successful:', {
+          sampleRate: audioContext.sampleRate,
+          bufferSize: bufferSize,
+          constraints: constraints
+        });
+        
         detect();
       } catch (error) {
         console.error('Audio setup error:', error);
@@ -85,7 +118,8 @@ const Tuner: React.FC = () => {
       rms = Math.sqrt(rms / dataRef.current.length);
       setVolume(rms);
       
-      const threshold = 0.005;
+      // Use a lower threshold for mobile devices
+      const threshold = 0.001; // Further reduced from 0.005 for mobile
       if (rms < threshold) {
         pitchHistory.current = [];
         setNote('—');
@@ -174,6 +208,11 @@ const Tuner: React.FC = () => {
       </div>
       <div style={{ fontSize: '1em', margin: '10px 0', color: '#666' }}>
         Volume: {(volume * 100).toFixed(1)}%
+        {volume < 0.001 && (
+          <span style={{ color: 'red', marginLeft: '10px' }}>
+            ⚠️ Too quiet - speak louder or move closer to microphone
+          </span>
+        )}
       </div>
       {!active && (
         <div style={{ color: 'red', margin: '20px 0' }}>
@@ -183,6 +222,14 @@ const Tuner: React.FC = () => {
       <div style={{ fontSize: '0.9em', margin: '20px 0', color: '#888' }}>
         <p>Try humming, whistling, or playing any instrument near your microphone.</p>
         <p>Make sure your microphone is not muted and volume is turned up.</p>
+        <p><strong>Mobile Tips:</strong></p>
+        <ul style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+          <li>Hold your phone close to your mouth (2-3 inches)</li>
+          <li>Try speaking loudly or whistling</li>
+          <li>Make sure your phone's microphone isn't blocked</li>
+          <li>Try in a quiet environment</li>
+          <li>Some phones have aggressive noise suppression - try different browsers</li>
+        </ul>
       </div>
       <button 
         onClick={playTestTone}
