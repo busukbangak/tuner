@@ -12,12 +12,14 @@ const Tuner: React.FC = () => {
   const [active, setActive] = useState(false);
   const [volume, setVolume] = useState(0);
   const [isPlayingTone, setIsPlayingTone] = useState(false);
+  const [gainLevel, setGainLevel] = useState(5.0);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataRef = useRef<Float32Array>(new Float32Array(bufferSize));
   const rafRef = useRef<number | null>(null);
   const sampleRateRef = useRef<number>(44100);
   const pitchHistory = useRef<number[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
     let stream: MediaStream;
@@ -82,13 +84,21 @@ const Tuner: React.FC = () => {
         const source = audioContext.createMediaStreamSource(stream);
         const analyser = audioContext.createAnalyser();
         
+        // Add a gain node to boost the signal
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = gainLevel; // Use the state value
+        gainNodeRef.current = gainNode; // Store reference for later updates
+        
         analyser.fftSize = bufferSize;
-        analyser.smoothingTimeConstant = 0.3;
-        analyser.minDecibels = -90;
+        analyser.smoothingTimeConstant = 0.3; // Reduced for more responsive detection
+        analyser.minDecibels = -90; // Lower threshold for mobile
         analyser.maxDecibels = -10;
         
+        // Connect: source -> gain -> analyser
+        source.connect(gainNode);
+        gainNode.connect(analyser);
+        
         analyserRef.current = analyser;
-        source.connect(analyser);
         setActive(true);
         
         // Log successful audio setup for debugging
@@ -194,6 +204,13 @@ const Tuner: React.FC = () => {
     setTimeout(() => setIsPlayingTone(false), 2000);
   };
 
+  const updateGain = (newGain: number) => {
+    setGainLevel(newGain);
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = newGain;
+    }
+  };
+
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
       <h2>Pitch Detector</h2>
@@ -213,6 +230,23 @@ const Tuner: React.FC = () => {
             ⚠️ Too quiet - speak louder or move closer to microphone
           </span>
         )}
+      </div>
+      <div style={{ margin: '15px 0' }}>
+        <label style={{ display: 'block', marginBottom: '5px' }}>
+          Gain Boost: {gainLevel.toFixed(1)}x
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="20"
+          step="0.5"
+          value={gainLevel}
+          onChange={(e) => updateGain(parseFloat(e.target.value))}
+          style={{ width: '200px' }}
+        />
+        <div style={{ fontSize: '0.8em', color: '#666', marginTop: '5px' }}>
+          Increase this if volume is too low
+        </div>
       </div>
       {!active && (
         <div style={{ color: 'red', margin: '20px 0' }}>
