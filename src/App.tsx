@@ -6,9 +6,23 @@ import { lerp } from "./shared/utils";
 function App() {
   const [fftIndex, setFftIndex] = useState(0);
   const fftSize = fftSizes[fftIndex];
-  const [note, octave, ctsOffPitch] = usePitchDetection(fftSize);
+  const [note, octave, ctsOffPitch, isPermissionGranted] = usePitchDetection(fftSize);
 
   const handleToggleFftSize = () => setFftIndex((prev) => (prev + 1) % fftSizes.length);
+
+  if (!isPermissionGranted) {
+    return (
+      <>
+        <div>Please allow microphone access and reload the page.</div>;
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+        >
+          Retry Microphone Access
+        </button>
+      </>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
