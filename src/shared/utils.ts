@@ -20,8 +20,8 @@ export const getFrequencyFromMidiNumber = (midiNumber: number) => {
 }
 
 export const getOctaveFromFrequency = (frequency: number) => {
-  const midiNumber = getMidiNumberFromFrequency(frequency);
-  return Math.floor(midiNumber / 12) - 1;
+    const midiNumber = getMidiNumberFromFrequency(frequency);
+    return Math.floor(midiNumber / 12) - 1;
 }
 
 export const centsOffPitch = (frequencyPlayed: number, correctFrequency: number) => {
@@ -29,7 +29,7 @@ export const centsOffPitch = (frequencyPlayed: number, correctFrequency: number)
 }
 
 // Info: Copied from here https://github.com/zplata/tuner-app/blob/main/autocorrelate.js
-export default function autoCorrelate(buffer: Float32Array<ArrayBuffer>, sampleRate: number) {
+export const autoCorrelate = (buffer: Float32Array<ArrayBuffer>, sampleRate: number) => {
     let SIZE = buffer.length;
     let rms = 0;
 
@@ -79,4 +79,8 @@ export default function autoCorrelate(buffer: Float32Array<ArrayBuffer>, sampleR
     if (a) T0 = T0 - b / (2 * a);
 
     return sampleRate / T0;
+}
+
+export const lerp = (start: number, end: number, factor: number) => {
+    return (1 - factor) * start + factor * end;
 }

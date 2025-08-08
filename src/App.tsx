@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { usePitchDetection } from "./shared/hooks/usePitchDetection";
 import fftSizes from "./shared/models/fftSizes";
+import { lerp } from "./shared/utils";
 
 function App() {
   const [fftIndex, setFftIndex] = useState(0);
@@ -21,7 +22,7 @@ function App() {
         Note: <span className="text-blue-600">{note}{octave}</span>
       </h1>
       <p className="text-lg text-gray-700">
-        Offpitch: <span className="font-mono">{ctsOffPitch}</span>
+        Offpitch: <span className="font-mono">{lerp(ctsOffPitch as number, ctsOffPitch as number, 0.1)}</span>
       </p>
     </div>
   );

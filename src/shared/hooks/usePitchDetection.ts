@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import autoCorrelate, { centsOffPitch, getAudioData, getFrequencyFromMidiNumber, getMidiNumberFromFrequency, getOctaveFromFrequency, setupMicrophone } from "../utils";
+import { autoCorrelate, centsOffPitch, getAudioData, getFrequencyFromMidiNumber, getMidiNumberFromFrequency, getOctaveFromFrequency, setupMicrophone } from "../utils";
 import notes from "../models/notes";
 
 export function usePitchDetection(fftSize: number) {
@@ -10,7 +10,7 @@ export function usePitchDetection(fftSize: number) {
   useEffect(() => {
     const audioContext = new window.AudioContext();
     const analyser = audioContext.createAnalyser();
-    analyser.fftSize = fftSize; 
+    analyser.fftSize = fftSize;
     const buffer = new Float32Array(analyser.fftSize);
     let pitchDetectionIntervalID: number;
 
@@ -34,6 +34,7 @@ export function usePitchDetection(fftSize: number) {
           setOctave(null);
           setCtsOffPitch(null);
         }
+        console.log(frequency)
 
         if (audioContext.state === "suspended") {
           audioContext.resume();
