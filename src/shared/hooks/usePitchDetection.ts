@@ -10,7 +10,7 @@ export function usePitchDetection(fftSize: number) {
   useEffect(() => {
     const audioContext = new window.AudioContext();
     const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 16384; // 2048, 4096, 8192, 16384 The higher the better for lower pitches
+    analyser.fftSize = fftSize; 
     const buffer = new Float32Array(analyser.fftSize);
     let pitchDetectionIntervalID: number;
 
