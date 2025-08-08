@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import autoCorrelate, { centsOffPitch, getAudioData, getFrequencyFromMidiNumber, getMidiNumberFromFrequency, getOctaveFromFrequency, setupMicrophone } from "../utils";
 import notes from "../models/notes";
 
-export function usePitchDetection() {
+export function usePitchDetection(fftSize: number) {
   const [note, setNote] = useState<string | null>(null);
   const [octave, setOctave] = useState<number | null>(null);
   const [ctsOffPitch, setCtsOffPitch] = useState<number | null>(null);
@@ -10,7 +10,7 @@ export function usePitchDetection() {
   useEffect(() => {
     const audioContext = new window.AudioContext();
     const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
+    analyser.fftSize = 16384; // 2048, 4096, 8192, 16384 The higher the better for lower pitches
     const buffer = new Float32Array(analyser.fftSize);
     let pitchDetectionIntervalID: number;
 
@@ -38,7 +38,7 @@ export function usePitchDetection() {
         if (audioContext.state === "suspended") {
           audioContext.resume();
         }
-      }, 1000);
+      }, 100);
     };
 
     startPitchDetection();
@@ -47,7 +47,7 @@ export function usePitchDetection() {
       if (pitchDetectionIntervalID) clearInterval(pitchDetectionIntervalID);
       audioContext.close();
     };
-  }, []);
+  }, [fftSize]);
 
   return [note, octave, ctsOffPitch];
 }
