@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils"
 
+// TODO: Make its colors dependent on dark/light theme
+// TODO: Hide circle when no frequncy and adjust colros accordingly
 type Props = {
   value?: number // in cents
   min?: number
@@ -17,7 +19,7 @@ export default function Tuner({
   value = 0,
   min = -50,
   max = 50,
-  note = "C",
+  note = "—",
   className,
   labelBelow = true,
 }: Props) {

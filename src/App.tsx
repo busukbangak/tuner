@@ -15,19 +15,25 @@ function App() {
   const [smoothPitch, setSmoothPitch] = useState(0);
 
   useEffect(() => {
-    if (frequency != null) {
-      setSmoothFrequency(prev => lerp(prev, frequency, 0.1)); // lower factor = smoother
+    if (frequency == null) {
+      setSmoothFrequency(0);
+    } else {
+      setSmoothFrequency(prev => lerp(prev, frequency, 0.1));
     }
   }, [frequency]);
 
   useEffect(() => {
-    if (ctsOffPitch != null) {
+    if (ctsOffPitch == null) {
+      setSmoothPitch(0);
+    } else {
       setSmoothPitch(prev => lerp(prev, ctsOffPitch, 0.1));
     }
   }, [ctsOffPitch]);
+
   const handleToggleFftSize = () => setFftIndex((prev) => (prev + 1) % fftSizes.length);
 
   // TODO: move this into its own hook the dark/light system
+  // TODO: Automatically take in system theme first
   const [theme, setTheme] = useState<"light" | "dark">("dark")
   // Initialize theme from storage or system preference
   useEffect(() => {
