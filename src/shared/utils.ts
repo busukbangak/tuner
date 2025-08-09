@@ -1,10 +1,39 @@
-export const setupMicrophone = async () => {
-    const microphone = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false
-    });
-    return microphone;
+interface ExtendedAudioConstraints extends MediaTrackConstraints {
+    sampleRate?: number;
+    latency?: number;
+    channelCount?: number;
 }
+
+export const setupMicrophone = async () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    const audioConstraints: ExtendedAudioConstraints = {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+    };
+
+    if (isIOS) {
+        audioConstraints.sampleRate = 44100; // CD quality
+        audioConstraints.latency = 0;        // Lower latency if possible
+        audioConstraints.channelCount = 2;   // Try stereo
+    } else {
+        audioConstraints.channelCount = 2;   // Stereo where possible
+    }
+
+    try {
+        const microphone = await navigator.mediaDevices.getUserMedia({
+            audio: audioConstraints,
+            video: false
+        });
+        return microphone;
+    } catch (err) {
+        console.error("Microphone access failed:", err);
+        throw err;
+    }
+};
+
+
 
 export const getAudioData = (analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>) => {
     analyser.getFloatTimeDomainData(buffer);
