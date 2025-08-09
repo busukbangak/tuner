@@ -28,22 +28,14 @@ export function usePitchDetection(fftSize: number) {
 
         if (isMobile) {
           const gainNode = audioContext.createGain();
-          gainNode.gain.value = 5; // 5x boost
-
-          const compressor = audioContext.createDynamicsCompressor();
-          compressor.threshold.setValueAtTime(-50, audioContext.currentTime);
-          compressor.knee.setValueAtTime(40, audioContext.currentTime);
-          compressor.ratio.setValueAtTime(12, audioContext.currentTime);
-          compressor.attack.setValueAtTime(0, audioContext.currentTime);
-          compressor.release.setValueAtTime(0.25, audioContext.currentTime);
-
+          gainNode.gain.value = 25; // 25x boost
+          
           const lowPass = audioContext.createBiquadFilter();
           lowPass.type = "lowpass";
           lowPass.frequency.setValueAtTime(1000, audioContext.currentTime);
 
           mediaSource.connect(gainNode);
-          gainNode.connect(compressor);
-          compressor.connect(lowPass);
+          gainNode.connect(lowPass);
           lowPass.connect(analyser);
         } else {
           mediaSource.connect(analyser);
