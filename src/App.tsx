@@ -57,7 +57,7 @@ function App() {
       document.head.appendChild(meta);
     }
     (document.querySelector('meta[name="theme-color"]') as HTMLMetaElement).content =
-      theme === "dark" ? "#171717" : "#f0f0f0";
+      theme === "dark" ? "#171717" : "#f9f9f9";
   }, [theme]);
 
   const isDark = theme === "dark"

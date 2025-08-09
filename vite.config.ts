@@ -32,7 +32,7 @@ export default defineConfig({
           name: 'Tuner',
           short_name: 'Tuner',
           description: 'Tuning App',
-          theme_color: '#e5e5e5',
+          theme_color: '#f9f9f9',
           display: "standalone",
           icons: [
             {
