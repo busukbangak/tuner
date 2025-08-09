@@ -48,6 +48,18 @@ function App() {
     document.documentElement.classList.toggle("dark", theme === "dark")
   }, [theme])
 
+  // Update meta tag
+  useEffect(() => {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (!metaThemeColor) {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    (document.querySelector('meta[name="theme-color"]') as HTMLMetaElement).content =
+      theme === "dark" ? "#404040" : "#e5e5e5";
+  }, [theme]);
+
   const isDark = theme === "dark"
 
   if (!isPermissionGranted) {
