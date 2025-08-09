@@ -13,7 +13,7 @@ export function usePitchDetection(fftSize: number) {
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = fftSize;
     const buffer = new Float32Array(analyser.fftSize);
-    let pitchDetectionIntervalID: number;
+    let pitchDetectionIntervalID: NodeJS.Timeout;
 
 
     const startPitchDetection = async () => {

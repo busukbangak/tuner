@@ -6,7 +6,7 @@ export const setupMicrophone = async () => {
     return microphone;
 }
 
-export const getAudioData = (analyser: AnalyserNode, buffer: Float32Array) => {
+export const getAudioData = (analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>) => {
     analyser.getFloatTimeDomainData(buffer);
     return buffer;
 }
