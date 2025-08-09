@@ -7,6 +7,7 @@ export function usePitchDetection(fftSize: number) {
   const [octave, setOctave] = useState<number | null>(null);
   const [ctsOffPitch, setCtsOffPitch] = useState<number | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState<boolean>(true);
+  const [frequency, setFrequency] = useState<number | null>(null);
 
   useEffect(() => {
     const audioContext = new window.AudioContext();
@@ -25,19 +26,20 @@ export function usePitchDetection(fftSize: number) {
 
         pitchDetectionIntervalID = setInterval(() => {
           const audioBufferData = getAudioData(analyser, buffer);
-          const frequency = autoCorrelate(audioBufferData, audioContext.sampleRate);
-          const midiNumber = getMidiNumberFromFrequency(frequency);
+          const correlatedFrequency = autoCorrelate(audioBufferData, audioContext.sampleRate);
+          const midiNumber = getMidiNumberFromFrequency(correlatedFrequency);
 
-          if (frequency > 0 && midiNumber >= 0) {
+          if (correlatedFrequency > 0 && midiNumber >= 0) {
+            setFrequency(correlatedFrequency);
             setNote(notes[midiNumber % 12]);
-            setOctave(getOctaveFromFrequency(frequency));
-            setCtsOffPitch(centsOffPitch(frequency, getFrequencyFromMidiNumber(midiNumber)));
+            setOctave(getOctaveFromFrequency(correlatedFrequency));
+            setCtsOffPitch(centsOffPitch(correlatedFrequency, getFrequencyFromMidiNumber(midiNumber)));
           } else {
+            setFrequency(null);
             setNote(null);
             setOctave(null);
             setCtsOffPitch(null);
           }
-          console.log(frequency)
 
           if (audioContext.state === "suspended") {
             audioContext.resume();
@@ -56,5 +58,5 @@ export function usePitchDetection(fftSize: number) {
     };
   }, [fftSize]);
 
-  return [note, octave, ctsOffPitch, isPermissionGranted] as const;
+  return [note, octave, ctsOffPitch, frequency, isPermissionGranted] as const;
 }
