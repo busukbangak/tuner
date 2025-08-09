@@ -8,7 +8,7 @@ export function usePitchDetection(fftSize: number) {
   const [ctsOffPitch, setCtsOffPitch] = useState<number | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState<boolean>(true);
   const [frequency, setFrequency] = useState<number | null>(null);
-  const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null); // TODO: dont use useref and clearTimout like i cleared the interval
 
   useEffect(() => {
     const audioContext = new window.AudioContext();
