@@ -19,7 +19,7 @@ export const setupMicrophone = async () => {
         audioConstraints.channelCount = 2;   // Stereo if supported
         audioConstraints.echoCancellation = false;
         audioConstraints.noiseSuppression = false;
-        audioConstraints.autoGainControl = false;
+        audioConstraints.autoGainControl = true;
     }
 
     try {
