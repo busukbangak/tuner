@@ -7,19 +7,14 @@ interface ExtendedAudioConstraints extends MediaTrackConstraints {
 export const setupMicrophone = async () => {
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    const audioConstraints: ExtendedAudioConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-    };
+    const audioConstraints: ExtendedAudioConstraints = {};
 
     if (isMobile) {
-        audioConstraints.sampleRate = 44100; // CD quality
         audioConstraints.latency = 0;        // Low latency
         audioConstraints.channelCount = 2;   // Stereo if supported
         audioConstraints.echoCancellation = false;
         audioConstraints.noiseSuppression = false;
-        audioConstraints.autoGainControl = true;
+        audioConstraints.autoGainControl = false;
     }
 
     try {

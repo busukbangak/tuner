@@ -9,6 +9,8 @@ export function usePitchDetection(fftSize: number) {
   const [isPermissionGranted, setIsPermissionGranted] = useState<boolean>(true);
   const [frequency, setFrequency] = useState<number | null>(null);
 
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   useEffect(() => {
     const audioContext = new window.AudioContext();
     const analyser = audioContext.createAnalyser();
@@ -22,7 +24,15 @@ export function usePitchDetection(fftSize: number) {
         const mediaStream = await setupMicrophone();
         setIsPermissionGranted(true);
         const mediaSource = audioContext.createMediaStreamSource(mediaStream);
-        mediaSource.connect(analyser);
+
+        if (isMobile) {
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = 15.0; // 15x boost
+          mediaSource.connect(gainNode);
+          gainNode.connect(analyser);
+        } else {
+          mediaSource.connect(analyser);
+        }
 
         pitchDetectionIntervalID = setInterval(() => {
           const audioBufferData = getAudioData(analyser, buffer);
