@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { autoCorrelate, centsOffPitch, getAudioData, getFrequencyFromMidiNumber, getMidiNumberFromFrequency, getOctaveFromFrequency, setupMicrophone } from "../utils";
 import notes from "../models/notes";
 
@@ -8,8 +8,7 @@ export function usePitchDetection(fftSize: number) {
   const [ctsOffPitch, setCtsOffPitch] = useState<number | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState<boolean>(true);
   const [frequency, setFrequency] = useState<number | null>(null);
-
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const audioContext = new window.AudioContext();
@@ -17,6 +16,8 @@ export function usePitchDetection(fftSize: number) {
     analyser.fftSize = fftSize;
     const buffer = new Float32Array(analyser.fftSize);
     let pitchDetectionIntervalID: NodeJS.Timeout;
+
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 
     const startPitchDetection = async () => {
@@ -27,9 +28,23 @@ export function usePitchDetection(fftSize: number) {
 
         if (isMobile) {
           const gainNode = audioContext.createGain();
-          gainNode.gain.value = 25.0; // 25x boost
+          gainNode.gain.value = 5; // 5x boost
+
+          const compressor = audioContext.createDynamicsCompressor();
+          compressor.threshold.setValueAtTime(-50, audioContext.currentTime);
+          compressor.knee.setValueAtTime(40, audioContext.currentTime);
+          compressor.ratio.setValueAtTime(12, audioContext.currentTime);
+          compressor.attack.setValueAtTime(0, audioContext.currentTime);
+          compressor.release.setValueAtTime(0.25, audioContext.currentTime);
+
+          const lowPass = audioContext.createBiquadFilter();
+          lowPass.type = "lowpass";
+          lowPass.frequency.setValueAtTime(1000, audioContext.currentTime);
+
           mediaSource.connect(gainNode);
-          gainNode.connect(analyser);
+          gainNode.connect(compressor);
+          compressor.connect(lowPass);
+          lowPass.connect(analyser);
         } else {
           mediaSource.connect(analyser);
         }
@@ -40,15 +55,29 @@ export function usePitchDetection(fftSize: number) {
           const midiNumber = getMidiNumberFromFrequency(correlatedFrequency);
 
           if (correlatedFrequency > 0 && midiNumber >= 0) {
+
+            // Clear any pending clears if new valid pitch arrives
+            if (clearTimeoutRef.current) {
+              clearTimeout(clearTimeoutRef.current);
+              clearTimeoutRef.current = null;
+            }
+
+
             setFrequency(correlatedFrequency);
             setNote(notes[midiNumber % 12]);
             setOctave(getOctaveFromFrequency(correlatedFrequency));
             setCtsOffPitch(centsOffPitch(correlatedFrequency, getFrequencyFromMidiNumber(midiNumber)));
           } else {
-            setFrequency(null);
-            setNote(null);
-            setOctave(null);
-            setCtsOffPitch(null);
+            // No valid pitch now — schedule clearing after 500ms
+            if (!clearTimeoutRef.current) {
+              clearTimeoutRef.current = setTimeout(() => {
+                setFrequency(null);
+                setNote(null);
+                setOctave(null);
+                setCtsOffPitch(null);
+                clearTimeoutRef.current = null;
+              }, 500);
+            }
           }
 
           if (audioContext.state === "suspended") {
@@ -64,6 +93,7 @@ export function usePitchDetection(fftSize: number) {
 
     return () => {
       if (pitchDetectionIntervalID) clearInterval(pitchDetectionIntervalID);
+      if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
       audioContext.close();
     };
   }, [fftSize]);
