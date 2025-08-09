@@ -28,15 +28,16 @@ export function usePitchDetection(fftSize: number) {
 
         if (isMobile) {
           const gainNode = audioContext.createGain();
-          gainNode.gain.value = 25; // 25x boost
+          gainNode.gain.value = 25; // TODO: Find better solution than only boosting for lower frequencies on mobile
           
-          const lowPass = audioContext.createBiquadFilter();
+          /* const lowPass = audioContext.createBiquadFilter();
           lowPass.type = "lowpass";
-          lowPass.frequency.setValueAtTime(1000, audioContext.currentTime);
+          lowPass.frequency.setValueAtTime(1000, audioContext.currentTime); */
 
           mediaSource.connect(gainNode);
-          gainNode.connect(lowPass);
-          lowPass.connect(analyser);
+          /* gainNode.connect(lowPass);
+          lowPass.connect(analyser); */
+          gainNode.connect(analyser);
         } else {
           mediaSource.connect(analyser);
         }
