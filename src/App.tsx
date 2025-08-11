@@ -11,7 +11,7 @@ function App() {
   const [note, octave, ctsOffPitch, frequency, isPermissionGranted] = usePitchDetection(fftSizes[fftIndex]);
 
   // TODO: Move this to usePitchDetection with optional Parameter if is smoothing
-  const [smoothFrequency, setSmoothFrequency] = useState(0);
+/*   const [smoothFrequency, setSmoothFrequency] = useState(0);
   const [smoothPitch, setSmoothPitch] = useState(0);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ function App() {
       setSmoothPitch(prev => lerp(prev, ctsOffPitch, 0.1));
     }
   }, [ctsOffPitch]);
-
+ */
   const handleToggleFftSize = () => setFftIndex((prev) => (prev + 1) % fftSizes.length);
 
   // TODO: move this into its own hook the dark/light system
@@ -98,7 +98,7 @@ function App() {
         {/* Tuner area grows and stays centered when there's extra vertical space */}
         <div className="flex-1 grid place-items-center">
           <div className="w-full max-w-4xl">
-            <Tuner value={smoothPitch} note={`${(note || octave) == null ? "—" : note as string + octave}`} />
+            <Tuner value={ctsOffPitch as number} note={`${(note || octave) == null ? "—" : note as string + octave}`} />
           </div>
         </div>
 
@@ -135,7 +135,7 @@ function App() {
           {/* Frequency stacked on two lines */}
           <div className="text-right leading-tight">
             <div className={`${isDark ? "text-neutral-400" : "text-neutral-600"} text-sm`}>{"Frequency"}</div>
-            <div className="text-cyan-500 font-medium text-lg">{frequency ? smoothFrequency.toFixed(2) : "000.00"} Hz</div>
+            <div className="text-cyan-500 font-medium text-lg">{frequency ? frequency.toFixed(2) : "000.00"} Hz</div>
           </div>
         </div>
       </section>
