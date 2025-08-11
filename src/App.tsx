@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePitchDetection } from "./shared/hooks/usePitchDetection";
 import fftSizes from "./shared/models/fftSizes";
-import { lerp } from "./shared/utils";
+/* import { lerp } from "./shared/utils"; */
 import Tuner from "./components/tuner";
 import { Button } from "./components/ui/button";
 import { Moon, Sun } from "lucide-react";

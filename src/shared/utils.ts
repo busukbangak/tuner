@@ -106,6 +106,6 @@ export const autoCorrelate = (buffer: Float32Array<ArrayBuffer>, sampleRate: num
     return sampleRate / T0;
 }
 
-export const lerp = (start: number, end: number, factor: number) => {
+/* export const lerp = (start: number, end: number, factor: number) => {
     return (1 - factor) * start + factor * end;
-}
+} */
