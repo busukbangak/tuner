@@ -98,7 +98,7 @@ function App() {
         {/* Tuner area grows and stays centered when there's extra vertical space */}
         <div className="flex-1 grid place-items-center">
           <div className="w-full max-w-4xl">
-            <Tuner value={smoothPitch} note={`${(note || octave) == null ? "—" : note as string + octave}`} ></Tuner>
+            <Tuner value={smoothPitch} note={`${(note || octave) == null ? "—" : note as string + octave}`} />
           </div>
         </div>
 
